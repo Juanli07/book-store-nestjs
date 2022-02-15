@@ -1,5 +1,7 @@
 import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { Roles } from '../role/decorators/role.decorator';
+import { RoleGuard } from '../role/guard/role.guard';
 import { User } from './user.entity';
 import { UserService } from './user.service';
 
@@ -11,6 +13,8 @@ export class UserController {
     ){}
 
     @Get(':id')
+    @Roles('ADMIN')
+    @UseGuards(AuthGuard(), RoleGuard)
     async getUser(@Param('id', ParseIntPipe) id: number): Promise<User> {
         const user = await this._userService.get(id);
         return user;
@@ -39,5 +43,14 @@ export class UserController {
     async deleteUser(@Param('id', ParseIntPipe) id: number): Promise<User> {
         const deletedUser = await this._userService.delete(id);
         return deletedUser;
+    }
+
+    @Post('setRole/:userId/:roleId')
+    async setRoleToUser(
+        @Param('userId', ParseIntPipe) userId: number,
+        @Param('roleId', ParseIntPipe) roleId: number,
+    ) {
+        const resp = await this._userService.setRoleToUser(userId, roleId);
+        return resp;
     }
 }
